@@ -1,0 +1,22 @@
+<div class="layout layout--col gap--large" style="align-items: flex-start; padding-left: 50px;">
+  {% for meal in meals %}
+    <div class="richtext">
+      <div class="content content--large">
+        <p><strong>{{ meal.name }}</strong></p>
+        <p>{{ meal.foods }}</p>
+      </div>
+    </div>
+  {% endfor %}
+  {% if meals == empty %}
+    <div class="richtext">
+      <div class="content content--xxlarge">
+        <p>Ei ruokalistaa tälle päivälle</p>
+      </div>
+    </div>
+  {% endif %}
+</div>
+<div class="title_bar">
+  <img class="image" src="https://trmnl.com/images/plugins/trmnl--render.svg">
+  <span class="title">Ruokalista</span>
+  <span class="instance">{{ date }}</span>
+</div>

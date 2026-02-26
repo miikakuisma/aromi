@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:aromi.hel.fi)",
+      "Bash(curl:*)",
+      "Bash(echo === DietGroupId + SuitabilityDietIds ===:*)"
+    ]
+  }
+}
