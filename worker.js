@@ -1,12 +1,39 @@
 // Aromi Menu Parser — Puter Worker
 
-const API_BASE = "https://aromi.hel.fi/AromieMenus/FI/Default/PALKE/PKeMenu/api/Common/Restaurant/RestaurantMeals";
-const RESTAURANT_ID = "d0b180f3-9496-4d03-a59e-b485573ad054";
+// ─── Aromi-kohde: Meilahden ala-aste (Helsingin kaupungin peruskoulu) ───
+// Vaihda nämä arvot toiseen kouluun tarvittaessa. Kaikki arvot löytyvät koulun
+// Aromi-sivun DevTools-työkalusta: F12 > Network > lataa sivu ja avaa ruokalista
+// > etsi pyyntö "RestaurantMeals" ja klikkaa sitä:
+//   - MENU_PORTAL    : pyynnön URL:sta polku ennen /api/... (esim. "KeMenu054")
+//   - RESTAURANT_ID  : pyynnön URL:n "Id="-parametri
+//   - DINER_GROUP_ID : Request Body -kentän "DinerGroupId"
+//   - DIET_GROUP_ID  : Request Body -kentän "DietGroupId"
+const MENU_PORTAL = "KeMenu054"; // Meilahden ala-aste
+const RESTAURANT_ID = "PASTE_RESTAURANT_ID_HERE";
+const DINER_GROUP_ID = "PASTE_DINER_GROUP_ID_HERE";
+const DIET_GROUP_ID = "PASTE_DIET_GROUP_ID_HERE";
+
+const API_BASE = `https://aromi.hel.fi/AromieMenus/FI/Default/PALKE/${MENU_PORTAL}/api/Common/Restaurant/RestaurantMeals`;
 const REQUEST_BODY = {
-  DinerGroupId: "7c7f4abb-5459-48bc-b211-72573511a250",
-  DietGroupId: "0943dc9b-5775-4fd2-b319-571cefb15fd5",
+  DinerGroupId: DINER_GROUP_ID,
+  DietGroupId: DIET_GROUP_ID,
   SuitabilityDietIds: [],
 };
+
+function assertConfigured() {
+  const missing = [
+    ["RESTAURANT_ID", RESTAURANT_ID],
+    ["DINER_GROUP_ID", DINER_GROUP_ID],
+    ["DIET_GROUP_ID", DIET_GROUP_ID],
+  ].filter(([, value]) => !value || value.startsWith("PASTE_"));
+
+  if (missing.length > 0) {
+    const names = missing.map(([name]) => name).join(", ");
+    throw new Error(
+      `Aromi-tunnisteet puuttuvat: ${names}. Täytä arvot worker.js-tiedoston yläreunaan (ohjeet kommenteissa).`
+    );
+  }
+}
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -34,6 +61,8 @@ function toISODate(date) {
 }
 
 async function fetchTodayMenu() {
+  assertConfigured();
+
   const today = new Date();
   const dateParam = toISODate(today);
 

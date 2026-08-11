@@ -1,10 +1,10 @@
-# Helsingin kaupungin päiväkotien ruokalistat TRMNL-näytölle
+# Helsingin kaupungin peruskoulujen ruokalistat TRMNL-näytölle
 
 <img width="800" height="480" alt="screenshot" src="https://github.com/user-attachments/assets/727abd4e-5bd0-4216-8978-445368d115fd" />
 
-Helsingin kaupungin päiväkotien päivittäinen ruokalista suoraan [TRMNL](https://trmnl.com/) e-ink -näytölle.
+Helsingin kaupungin peruskoulun päivittäinen ruokalista suoraan [TRMNL](https://trmnl.com/) e-ink -näytölle. Oletuksena kohteena on **Meilahden ala-aste**.
 
-Ruokalistat haetaan Helsingin kaupungin [Aromi-järjestelmästä](https://aromi.hel.fi/AromieMenus/FI/Default/PALKE/PKeMenu/Page/Restaurant), josta löytyvät kaikkien kaupungin päiväkotien ruokalistat.
+Ruokalistat haetaan Helsingin kaupungin [Aromi-järjestelmästä](https://aromi.hel.fi/AromieMenus/FI/Default/PALKE/KeMenu054/Restaurant.aspx), josta löytyvät kaikkien kaupungin peruskoulujen ruokalistat.
 
 ## Miten se toimii
 
@@ -68,13 +68,20 @@ HUOM! Allergiatiedot on tarkoituksella karsittu pois, jos haluat ne mukaan joudu
 
 ## Muokkaus
 
-Oletuksena worker hakee **PALKE**-ravintolaryhmän ruokalistaa. Jos haluat vaihtaa ravintolan, muokkaa `worker.js`-tiedostossa seuraavia arvoja:
+Oletuksena worker hakee **Meilahden ala-asteen** (portaali `KeMenu054`) ruokalistaa. Jos haluat vaihtaa koulua, muokkaa `worker.js`-tiedoston yläreunan arvoja:
 
+- `MENU_PORTAL` - koulun portaalin polku (esim. `KeMenu054`)
 - `RESTAURANT_ID` - ravintolan tunniste
-- `DinerGroupId` - ruokailijaryhmä
-- `DietGroupId` - ruokavalioryhmä
+- `DINER_GROUP_ID` - ruokailijaryhmä
+- `DIET_GROUP_ID` - ruokavalioryhmä
 
-Nämä tunnisteet löydät Aromin verkkosivuilta selaimen DevTools-työkalujen Network-välilehdeltä.
+Nämä tunnisteet löydät koulun Aromi-sivun selaimen DevTools-työkalujen **Network**-välilehdeltä:
+
+1. Avaa koulun Aromi-sivu ja paina **F12** → **Network**
+2. Lataa sivu uudelleen ja avaa päivän ruokalista
+3. Etsi pyyntö **`RestaurantMeals`** ja avaa se
+4. Pyynnön URL:sta saat `MENU_PORTAL`-polun (ennen `/api/`) ja `Id=`-parametrin (`RESTAURANT_ID`)
+5. Pyynnön **Request Body** -kohdasta saat `DinerGroupId`- ja `DietGroupId`-arvot
 
 ## Teknologiat
 
