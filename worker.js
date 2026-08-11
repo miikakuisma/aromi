@@ -1,10 +1,14 @@
 // Aromi Menu Parser — Puter Worker
 
-const API_BASE = "https://aromi.hel.fi/AromieMenus/FI/Default/PALKE/PKeMenu/api/Common/Restaurant/RestaurantMeals";
-const RESTAURANT_ID = "d0b180f3-9496-4d03-a59e-b485573ad054";
+// Meilahden ala-aste, Aromi-portaali KeMenu054, ruokailijaryhmä "Ala-Aste"
+const API_BASE = "https://aromi.hel.fi/AromieMenus/FI/Default/PALKE/KeMenu054/api/Common/Restaurant/RestaurantMeals";
+const RESTAURANT_ID = "737d9be1-762c-48d9-a8a7-732567590165";
+const DINER_GROUP_ID = "178ca380-3d70-4ee8-b1b6-277aefa17455";
+const DIET_GROUP_ID = "bfe0b425-95a6-47b3-8b4f-adc80ab28a1b";
+
 const REQUEST_BODY = {
-  DinerGroupId: "7c7f4abb-5459-48bc-b211-72573511a250",
-  DietGroupId: "0943dc9b-5775-4fd2-b319-571cefb15fd5",
+  DinerGroupId: DINER_GROUP_ID,
+  DietGroupId: DIET_GROUP_ID,
   SuitabilityDietIds: [],
 };
 
