@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meilahden ala-aste — ruokalista</title>
+<meta name="description" content="Meilahden ala-asteen kouluruokalista viikoittain. Tiedot Helsingin kaupungin Aromi-palvelusta.">
+<meta name="theme-color" content="#EDF2F9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1725" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Meilahden ala-aste — ruokalista">
+<meta property="og:description" content="Mitä koulussa syödään tällä viikolla?">
+<meta property="og:locale" content="fi_FI">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<style>
+:root {
+  --paper:      #EDF2F9;
+  --card:       #FFFFFF;
+  --ink:        #14243A;
+  --ink-soft:   #5C6E87;
+  --rule:       #D3DEEC;
+  --today:      #E0912A;
+  --today-wash: #FDF3E3;
+  --veg:        #2E7D52;
+  --heart:      #C8385A;
+  --shadow:     0 1px 2px rgba(20,36,58,.06), 0 12px 28px -12px rgba(20,36,58,.22);
+
+  --display: "Familjen Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --body:    "Newsreader", ui-serif, Georgia, serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:      #0E1725;
+    --card:       #17233A;
+    --ink:        #E8EEF7;
+    --ink-soft:   #93A3BB;
+    --rule:       #2A3A55;
+    --today:      #F0A741;
+    --today-wash: #24304A;
+    --veg:        #5FB98A;
+    --heart:      #F0819B;
+    --shadow:     0 1px 2px rgba(0,0,0,.4), 0 12px 28px -12px rgba(0,0,0,.6);
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
+.wrap {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem calc(3rem + env(safe-area-inset-bottom));
+}
+
+/* ---- Otsikko ---- */
+
+.eyebrow {
+  font-family: var(--display);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 .5rem;
+}
+
+h1 {
+  font-family: var(--display);
+  font-size: clamp(1.85rem, 8vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.05;
+  margin: 0;
+}
+
+/* ---- Viikkonavigaatio ---- */
+
+.weeknav {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin: 1.5rem 0 .75rem;
+}
+
+.weeknav p {
+  font-family: var(--display);
+  font-size: .95rem;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.weeknav .range {
+  display: block;
+  font-weight: 400;
+  color: var(--ink-soft);
+  font-size: .85rem;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.arrow {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: var(--card);
+  font-family: var(--display);
+  font-size: 1.1rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+
+.arrow:hover { border-color: var(--ink-soft); }
+
+/* ---- Viikkonauha: tarjottimen lokerikko ---- */
+
+.strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  list-style: none;
+  margin: 0 0 2.25rem;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: .7rem;
+  overflow: hidden;
+  background: var(--card);
+}
+
+.strip li + li { border-left: 1px solid var(--rule); }
+
+.strip button {
+  width: 100%;
+  padding: .55rem .25rem .6rem;
+  display: block;
+  font-family: var(--display);
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.strip .wd {
+  display: block;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.strip .dn {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: .1rem;
+}
+
+.strip .empty .dn { color: var(--ink-soft); opacity: .45; }
+.strip .past     { opacity: .5; }
+
+.strip .now {
+  background: var(--today);
+  color: #1B1206;
+}
+.strip .now .dn, .strip .now .wd { color: #1B1206; }
+
+/* ---- Päivät ---- */
+
+.day {
+  padding: 1.4rem 0;
+  border-top: 1px solid var(--rule);
+}
+
+.day.past { opacity: .6; }
+
+.dayhead {
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+  font-family: var(--display);
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: .7rem;
+}
+
+.tag {
+  font-size: .68rem;
+  letter-spacing: .14em;
+  padding: .2rem .45rem;
+  border-radius: .25rem;
+  background: var(--today);
+  color: #1B1206;
+}
+
+/* Tämä päivä nostetaan esiin — sivun ainoa korostus. */
+.day.today {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--today);
+  border-radius: .8rem;
+  padding: 1.4rem 1.25rem;
+  margin: 1.25rem 0;
+  box-shadow: var(--shadow);
+  scroll-margin-top: 1rem;
+}
+
+.day.today + .day { border-top: 1px solid var(--rule); }
+.day.today .dayhead { color: var(--ink); }
+
+.opt + .opt {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--rule);
+}
+
+.main {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -.005em;
+}
+
+.day.today .main { font-size: 1.45rem; }
+
+.sides {
+  margin: .3rem 0 0;
+  font-family: var(--display);
+  font-size: .88rem;
+  color: var(--ink-soft);
+}
+
+.marks {
+  display: inline-flex;
+  gap: .3rem;
+  margin-left: .4rem;
+  vertical-align: .12em;
+}
+
+.mark {
+  font-family: var(--display);
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: .16rem .34rem;
+  border-radius: .25rem;
+  white-space: nowrap;
+}
+
+.mark.veg   { color: var(--veg);   background: color-mix(in srgb, var(--veg) 12%, transparent); }
+.mark.heart {
+  color: var(--heart);
+  background: color-mix(in srgb, var(--heart) 12%, transparent);
+  font-size: .8rem;
+  line-height: .8;
+  padding: .1rem .3rem .16rem;
+}
+
+.none {
+  margin: 0;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.next {
+  margin: .45rem 0 0;
+  font-family: var(--display);
+  font-size: .88rem;
+  color: var(--ink-soft);
+}
+
+.next b { font-weight: 600; color: var(--ink); }
+
+/* ---- Tilat ---- */
+
+.state {
+  text-align: center;
+  padding: 3rem 0;
+  color: var(--ink-soft);
+}
+
+.state p { margin: 0 0 1rem; }
+
+.state button.retry {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: .9rem;
+  border: 1px solid var(--rule);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: .5rem;
+  padding: .55rem 1.1rem;
+}
+
+.skeleton span {
+  display: block;
+  height: .85rem;
+  border-radius: .3rem;
+  background: var(--rule);
+  margin: .6rem 0;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse { 0%,100% { opacity: .45 } 50% { opacity: .9 } }
+
+/* ---- Alatunniste ---- */
+
+footer {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--display);
+  font-size: .78rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+footer p { margin: 0 0 .5rem; }
+footer a { color: var(--ink-soft); }
+
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem .9rem;
+  margin-bottom: .9rem;
+}
+
+.key span { display: inline-flex; align-items: center; gap: .35rem; }
+
+/* ---- Liike ---- */
+
+.day { animation: rise .45s cubic-bezier(.2,.7,.3,1) both; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.day.past { animation-name: rise-past; }
+@keyframes rise-past {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: .6; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--today);
+  outline-offset: 2px;
+  border-radius: .3rem;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Kouluruoka</p>
+    <h1>Meilahden ala-aste</h1>
+
+    <nav class="weeknav" aria-label="Viikon valinta">
+      <button class="arrow" id="prev" aria-label="Edellinen viikko">‹</button>
+      <p id="weeklabel" aria-live="polite">&nbsp;<span class="range">&nbsp;</span></p>
+      <button class="arrow" id="next" aria-label="Seuraava viikko">›</button>
+    </nav>
+
+    <ol class="strip" id="strip"></ol>
+  </header>
+
+  <main id="days">
+    <div class="state skeleton" aria-label="Ladataan ruokalistaa">
+      <span style="width:40%"></span><span style="width:85%"></span><span style="width:60%"></span>
+    </div>
+  </main>
+
+  <footer>
+    <div class="key">
+      <span><b class="mark veg">Veg</b> Vegaaninen</span>
+      <span><b class="mark heart">♥</b> Parempi valinta</span>
+    </div>
+    <p>Ruokalista haetaan Helsingin kaupungin Aromi-palvelusta. Tarkat
+       allergeeni- ja erityisruokavaliotiedot löydät
+       <a href="https://aromi.hel.fi/AromieMenus/FI/Default/PALKE/KeMenu054/" target="_blank" rel="noopener">Aromin omalta sivulta</a>.</p>
+    <p><a href="https://developer.puter.com" target="_blank" rel="noopener">Powered by Puter</a></p>
+  </footer>
+</div>
+
+<script>
+// Osoita tämä omaan Puter-workeriisi (sama worker joka palvelee TRMNL:ää).
+const WORKER_URL = "https://YOUR-WORKER.puter.site";
+
+const MONTHS_SHORT = ["1","2","3","4","5","6","7","8","9","10","11","12"];
+
+const daysEl  = document.getElementById("days");
+const stripEl = document.getElementById("strip");
+const labelEl = document.getElementById("weeklabel");
+
+let offset = 0;
+let loadedAt = 0;
+
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function dayNum(ymd) { return Number(ymd.slice(8, 10)); }
+function monthNum(ymd) { return MONTHS_SHORT[Number(ymd.slice(5, 7)) - 1]; }
+
+function state(html) {
+  stripEl.innerHTML = "";
+  daysEl.innerHTML = `<div class="state">${html}</div>`;
+}
+
+function markup(diets) {
+  const list = (diets || "").split(",").map((s) => s.trim());
+  let out = "";
+  if (list.includes("Veg")) out += `<b class="mark veg" title="Vegaaninen">Veg</b>`;
+  if (list.includes("♥")) out += `<b class="mark heart" title="Parempi valinta">♥</b>`;
+  return out ? `<span class="marks">${out}</span>` : "";
+}
+
+function renderStrip(data) {
+  stripEl.innerHTML = data.days.map((d) => {
+    const cls = [
+      d.options.length ? "" : "empty",
+      d.isToday ? "now" : "",
+      !d.isToday && d.date < data.today ? "past" : "",
+    ].filter(Boolean).join(" ");
+    return `<li><button class="${cls}" data-goto="${d.date}">
+      <span class="wd">${d.weekday}</span>
+      <span class="dn">${dayNum(d.date)}</span>
+    </button></li>`;
+  }).join("");
+}
+
+function renderDays(data) {
+  const anyFood = data.days.some((d) => d.options.length);
+
+  if (!anyFood) {
+    daysEl.innerHTML = `<div class="state"><p>Tällä viikolla ei ole ruokailua.</p></div>`;
+    return;
+  }
+
+  daysEl.innerHTML = data.days.map((d, i) => {
+    const past = !d.isToday && d.date < data.today;
+    const cls = ["day", d.isToday ? "today" : "", past ? "past" : ""].filter(Boolean).join(" ");
+
+    // Jos tänään ei ole ruokailua, kerro milloin seuraava on.
+    const upcoming = data.days.find((n) => n.date > d.date && n.options.length);
+    const hint = d.isToday && upcoming
+      ? `<p class="next">Seuraava ruokailu <b>${upcoming.weekday} ${dayNum(upcoming.date)}.${monthNum(upcoming.date)}.</b></p>`
+      : "";
+
+    const body = d.options.length
+      ? d.options.map((o) => `
+          <div class="opt">
+            <p class="main">${esc(o.main.join(" ja "))}${markup(o.diets)}</p>
+            ${o.sides.length ? `<p class="sides">${esc(o.sides.join(" · "))}</p>` : ""}
+          </div>`).join("")
+      : `<p class="none">Ei kouluruokailua</p>${hint}`;
+
+    return `<section class="${cls}" id="d-${d.date}" style="animation-delay:${i * 45}ms">
+      <h2 class="dayhead">
+        <span>${d.weekday} ${dayNum(d.date)}.${monthNum(d.date)}.</span>
+        ${d.isToday ? `<span class="tag">Tänään</span>` : ""}
+      </h2>
+      ${body}
+    </section>`;
+  }).join("");
+}
+
+function renderLabel(data) {
+  const range = `${dayNum(data.start)}.${monthNum(data.start)}.–${dayNum(data.end)}.${monthNum(data.end)}.`;
+  labelEl.innerHTML = `Viikko ${data.week}<span class="range">${range}</span>`;
+}
+
+async function load() {
+  try {
+    if (WORKER_URL.includes("YOUR-WORKER")) {
+      state(`<p>Aseta <code>WORKER_URL</code> tiedoston <code>index.html</code> alaosassa
+             osoittamaan omaan Puter-workeriisi.</p>`);
+      return;
+    }
+
+    const res = await fetch(`${WORKER_URL}/api/week?offset=${offset}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(String(res.status));
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    renderLabel(data);
+    renderStrip(data);
+    renderDays(data);
+    loadedAt = Date.now();
+
+    // Avaa kuluva päivä näkyviin, jos se jää ruudun alapuolelle.
+    if (offset === 0) {
+      const today = daysEl.querySelector(".day.today");
+      if (today && today.getBoundingClientRect().bottom > window.innerHeight) {
+        today.scrollIntoView({ block: "center", behavior: "instant" });
+      }
+    }
+  } catch (err) {
+    state(`<p>Ruokalistaa ei juuri nyt saatu haettua.</p>
+           <button class="retry" onclick="load()">Yritä uudelleen</button>`);
+  }
+}
+
+document.getElementById("prev").onclick = () => { offset--; load(); };
+document.getElementById("next").onclick = () => { offset++; load(); };
+
+stripEl.onclick = (e) => {
+  const btn = e.target.closest("[data-goto]");
+  if (!btn) return;
+  const el = document.getElementById(`d-${btn.dataset.goto}`);
+  // Tarkoituksella "instant": osassa selaimista pehmeä vieritys on kytketty
+  // pois, jolloin smooth-pyyntö ei tee mitään ja painike jäisi kuolleeksi.
+  if (el) el.scrollIntoView({ block: "center", behavior: "instant" });
+};
+
+// Välilehti voi olla auki yön yli — päivitä kun siihen palataan.
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && Date.now() - loadedAt > 10 * 60 * 1000) load();
+});
+
+load();
+</script>
+
+</body>
+</html>
