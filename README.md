@@ -1,5 +1,7 @@
 # Helsingin kaupungin päiväkotien ruokalistat TRMNL-näytölle
 
+<img width="800" height="480" alt="screenshot" src="https://github.com/user-attachments/assets/727abd4e-5bd0-4216-8978-445368d115fd" />
+
 Helsingin kaupungin päiväkotien päivittäinen ruokalista suoraan [TRMNL](https://trmnl.com/) e-ink -näytölle.
 
 Ruokalistat haetaan Helsingin kaupungin [Aromi-järjestelmästä](https://aromi.hel.fi/AromieMenus/FI/Default/PALKE/PKeMenu/Page/Restaurant), josta löytyvät kaikkien kaupungin päiväkotien ruokalistat.
@@ -8,15 +10,16 @@ Ruokalistat haetaan Helsingin kaupungin [Aromi-järjestelmästä](https://aromi.
 
 ```
 TRMNL-näyttö  →  Puter Worker (/api/menu)  →  Aromi API (aromi.hel.fi)
-                        ↓
-                  JSON-vastaus: { date, meals }
-                        ↓
-                  TRMNL plugin.html renderöi
-                  ruokalistan e-ink -näytölle
+↓
+JSON-vastaus: { date, meals }
+↓
+TRMNL plugin.html renderöi ruokalistan e-ink -näytölle
 ```
 
 1. **Puter Worker** (`worker.js`) hakee päivän ruokalistan Aromi API:sta ja muuntaa sen yksinkertaiseen JSON-muotoon
 2. **TRMNL plugin** (`TRMNL plugin.html`) renderöi datan Jinja2-templatella e-ink -näytölle sopivaan muotoon
+
+HUOM! Allergiatiedot on tarkoituksella karsittu pois, jos haluat ne mukaan joudut muokkaamaan workeriä.
 
 ## Tiedostot
 
