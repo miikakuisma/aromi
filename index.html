@@ -11,6 +11,16 @@
 <meta property="og:title" content="Meilahden ala-aste — ruokalista">
 <meta property="og:description" content="Mitä koulussa syödään tällä viikolla?">
 <meta property="og:locale" content="fi_FI">
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Ruokalista">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<!-- iOS 16.4 ja uudemmat lukevat manifestin, vanhemmat tarvitsevat tämän. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
@@ -62,7 +72,10 @@ body {
 .wrap {
   max-width: 34rem;
   margin: 0 auto;
-  padding: 2rem 1.25rem calc(3rem + env(safe-area-inset-bottom));
+  /* Kotivalikosta avattuna selainpalkkia ei ole, joten otsikko osuisi
+     lovaan ilman yläreunan turva-aluetta. */
+  padding: calc(2rem + env(safe-area-inset-top)) 1.25rem
+           calc(3rem + env(safe-area-inset-bottom));
 }
 
 /* ---- Otsikko ---- */
@@ -184,6 +197,30 @@ button {
   color: #1B1206;
 }
 .strip .now .dn, .strip .now .wd { color: #1B1206; }
+
+/* ---- Tallennettu lista ---- */
+
+.stale {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  margin: -1.5rem 0 1.75rem;
+  font-family: var(--display);
+  font-size: .8rem;
+  color: var(--ink-soft);
+}
+
+/* hidden-attribuutti ei tehoa yksinään, koska display on flex. */
+.stale[hidden] { display: none; }
+
+.stale::before {
+  content: "";
+  flex: none;
+  width: .45rem;
+  height: .45rem;
+  border-radius: 50%;
+  background: var(--ink-soft);
+}
 
 /* ---- Päivät ---- */
 
@@ -397,6 +434,7 @@ footer a { color: var(--ink-soft); }
     </nav>
 
     <ol class="strip" id="strip"></ol>
+    <p class="stale" id="stale" role="status" hidden></p>
   </header>
 
   <main id="days">
@@ -421,14 +459,19 @@ footer a { color: var(--ink-soft); }
 // Osoita tämä omaan Puter-workeriisi (sama worker joka palvelee TRMNL:ää).
 const WORKER_URL = "https://aromi.puter.work";
 
+const TIME_ZONE = "Europe/Helsinki";
+const STORE_PREFIX = "aromi:week:";
 const MONTHS_SHORT = ["1","2","3","4","5","6","7","8","9","10","11","12"];
 
 const daysEl  = document.getElementById("days");
 const stripEl = document.getElementById("strip");
 const labelEl = document.getElementById("weeklabel");
+const staleEl = document.getElementById("stale");
 
 let offset = 0;
 let loadedAt = 0;
+let requestId = 0;
+let scrolledFor = null;
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -436,9 +479,106 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) =>
 function dayNum(ymd) { return Number(ymd.slice(8, 10)); }
 function monthNum(ymd) { return MONTHS_SHORT[Number(ymd.slice(5, 7)) - 1]; }
 
+// --- Päivämäärät ------------------------------------------------------------
+// Sivu laskee kuluvan päivän itse eikä luota vastauksen "today"-kenttään:
+// tallennettu lista voi olla eiliseltä, jolloin sen mukana tullut päivä
+// korostaisi väärää saraketta. Laskenta UTC:ssä, jottei vyöhyke siirrä päivää.
+
+function todayInHelsinki() {
+  try {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit",
+    }).formatToParts(new Date());
+    const get = (type) => parts.find((p) => p.type === type).value;
+    return `${get("year")}-${get("month")}-${get("day")}`;
+  } catch {
+    return new Date().toISOString().slice(0, 10);
+  }
+}
+
+function toUTCDate(ymd) {
+  const [year, month, day] = ymd.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function addDays(ymd, days) {
+  const date = toUTCDate(ymd);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function mondayOf(ymd) {
+  return addDays(ymd, -((toUTCDate(ymd).getUTCDay() + 6) % 7));
+}
+
+// Mitä maanantaita offset tarkoittaa juuri nyt. Tämä on avain jolla tallennettu
+// viikko tunnistetaan: "offset 0" osoittaa eri viikkoon eri päivinä, joten
+// pelkällä offsetilla säilötty lista näkyisi ensi maanantaina väärin.
+function expectedMonday(off) {
+  return addDays(mondayOf(todayInHelsinki()), off * 7);
+}
+
+// --- Tallennus --------------------------------------------------------------
+
+function storeWeek(data) {
+  try {
+    localStorage.setItem(STORE_PREFIX + data.start,
+      JSON.stringify({ savedAt: Date.now(), data }));
+  } catch { /* privaattitila tai täysi kiintiö — ei kriittistä */ }
+}
+
+function readWeek(start) {
+  try {
+    const raw = localStorage.getItem(STORE_PREFIX + start);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+// Selailu menneisiin viikkoihin kerryttäisi tallennettuja listoja loputtomiin.
+function pruneStore() {
+  try {
+    const monday = toUTCDate(expectedMonday(0));
+    for (const key of Object.keys(localStorage)) {
+      if (!key.startsWith(STORE_PREFIX)) continue;
+      const start = toUTCDate(key.slice(STORE_PREFIX.length));
+      if (Math.abs(start - monday) > 28 * 86400 * 1000) localStorage.removeItem(key);
+    }
+  } catch { /* ohitetaan */ }
+}
+
+// --- Tilat ------------------------------------------------------------------
+
 function state(html) {
   stripEl.innerHTML = "";
   daysEl.innerHTML = `<div class="state">${html}</div>`;
+}
+
+function skeleton() {
+  daysEl.innerHTML = `<div class="state skeleton" aria-label="Ladataan ruokalistaa">
+    <span style="width:40%"></span><span style="width:85%"></span><span style="width:60%"></span>
+  </div>`;
+}
+
+// Näkyy vain kun haku epäonnistui ja ruudulla on tallennettu lista.
+function setStale(savedAt) {
+  if (!savedAt) { staleEl.hidden = true; return; }
+  staleEl.hidden = false;
+  staleEl.textContent = `Ei yhteyttä — lista tallennettu ${savedAtLabel(savedAt)}.`;
+}
+
+function savedAtLabel(ts) {
+  const when = new Date(ts);
+  const time = new Intl.DateTimeFormat("fi-FI", {
+    timeZone: TIME_ZONE, hour: "numeric", minute: "2-digit",
+  }).format(when);
+  const day = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(when);
+
+  const today = todayInHelsinki();
+  if (day === today) return `tänään klo ${time}`;
+  if (day === addDays(today, -1)) return `eilen klo ${time}`;
+  return `${dayNum(day)}.${monthNum(day)}. klo ${time}`;
 }
 
 function markup(diets) {
@@ -449,12 +589,12 @@ function markup(diets) {
   return out ? `<span class="marks">${out}</span>` : "";
 }
 
-function renderStrip(data) {
+function renderStrip(data, today) {
   stripEl.innerHTML = data.days.map((d) => {
     const cls = [
       d.options.length ? "" : "empty",
-      d.isToday ? "now" : "",
-      !d.isToday && d.date < data.today ? "past" : "",
+      d.date === today ? "now" : "",
+      d.date < today ? "past" : "",
     ].filter(Boolean).join(" ");
     return `<li><button class="${cls}" data-goto="${d.date}">
       <span class="wd">${d.weekday}</span>
@@ -463,7 +603,7 @@ function renderStrip(data) {
   }).join("");
 }
 
-function renderDays(data) {
+function renderDays(data, today) {
   const anyFood = data.days.some((d) => d.options.length);
 
   if (!anyFood) {
@@ -472,12 +612,13 @@ function renderDays(data) {
   }
 
   daysEl.innerHTML = data.days.map((d, i) => {
-    const past = !d.isToday && d.date < data.today;
-    const cls = ["day", d.isToday ? "today" : "", past ? "past" : ""].filter(Boolean).join(" ");
+    const isToday = d.date === today;
+    const past = d.date < today;
+    const cls = ["day", isToday ? "today" : "", past ? "past" : ""].filter(Boolean).join(" ");
 
     // Jos tänään ei ole ruokailua, kerro milloin seuraava on.
     const upcoming = data.days.find((n) => n.date > d.date && n.options.length);
-    const hint = d.isToday && upcoming
+    const hint = isToday && upcoming
       ? `<p class="next">Seuraava ruokailu <b>${upcoming.weekday} ${dayNum(upcoming.date)}.${monthNum(upcoming.date)}.</b></p>`
       : "";
 
@@ -492,7 +633,7 @@ function renderDays(data) {
     return `<section class="${cls}" id="d-${d.date}" style="animation-delay:${i * 45}ms">
       <h2 class="dayhead">
         <span>${d.weekday} ${dayNum(d.date)}.${monthNum(d.date)}.</span>
-        ${d.isToday ? `<span class="tag">Tänään</span>` : ""}
+        ${isToday ? `<span class="tag">Tänään</span>` : ""}
       </h2>
       ${body}
     </section>`;
@@ -504,34 +645,63 @@ function renderLabel(data) {
   labelEl.innerHTML = `Viikko ${data.week}<span class="range">${range}</span>`;
 }
 
-async function load() {
-  try {
-    if (WORKER_URL.includes("YOUR-WORKER")) {
-      state(`<p>Aseta <code>WORKER_URL</code> tiedoston <code>index.html</code> alaosassa
-             osoittamaan omaan Puter-workeriisi.</p>`);
-      return;
-    }
+function render(data) {
+  const today = todayInHelsinki();
+  renderLabel(data);
+  renderStrip(data, today);
+  renderDays(data, today);
 
+  // Avaa kuluva päivä näkyviin kerran viikkonäkymää kohden — ei joka
+  // taustapäivityksellä, jottei sivu nykisi kesken lukemisen.
+  if (data.start === expectedMonday(0) && scrolledFor !== data.start) {
+    scrolledFor = data.start;
+    const el = daysEl.querySelector(".day.today");
+    if (el && el.getBoundingClientRect().bottom > window.innerHeight) {
+      el.scrollIntoView({ block: "center", behavior: "instant" });
+    }
+  }
+}
+
+// silent = älä näytä latausluurankoa. Taustapäivitys ei saa tyhjentää ruutua.
+async function load({ silent = false } = {}) {
+  if (WORKER_URL.includes("YOUR-WORKER")) {
+    state(`<p>Aseta <code>WORKER_URL</code> tiedoston <code>index.html</code> alaosassa
+           osoittamaan omaan Puter-workeriisi.</p>`);
+    return;
+  }
+
+  const myId = ++requestId;
+  const saved = readWeek(expectedMonday(offset));
+
+  // Tallennettu lista ruudulle heti; verkko korjaa sen perässä.
+  if (saved) {
+    render(saved.data);
+    setStale(null);
+  } else if (!silent) {
+    setStale(null);
+    skeleton();
+  }
+
+  try {
     const res = await fetch(`${WORKER_URL}/api/week?offset=${offset}`, { cache: "no-store" });
     if (!res.ok) throw new Error(String(res.status));
     const data = await res.json();
     if (data.error) throw new Error(data.error);
+    if (myId !== requestId) return;   // käyttäjä ehti vaihtaa viikkoa
 
-    renderLabel(data);
-    renderStrip(data);
-    renderDays(data);
+    storeWeek(data);
+    render(data);
+    setStale(null);
     loadedAt = Date.now();
-
-    // Avaa kuluva päivä näkyviin, jos se jää ruudun alapuolelle.
-    if (offset === 0) {
-      const today = daysEl.querySelector(".day.today");
-      if (today && today.getBoundingClientRect().bottom > window.innerHeight) {
-        today.scrollIntoView({ block: "center", behavior: "instant" });
-      }
-    }
   } catch (err) {
-    state(`<p>Ruokalistaa ei juuri nyt saatu haettua.</p>
-           <button class="retry" onclick="load()">Yritä uudelleen</button>`);
+    if (myId !== requestId) return;
+    if (saved) {
+      setStale(saved.savedAt);
+    } else {
+      setStale(null);
+      state(`<p>Ruokalistaa ei juuri nyt saatu haettua.</p>
+             <button class="retry" onclick="load()">Yritä uudelleen</button>`);
+    }
   }
 }
 
@@ -549,9 +719,20 @@ stripEl.onclick = (e) => {
 
 // Välilehti voi olla auki yön yli — päivitä kun siihen palataan.
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden && Date.now() - loadedAt > 10 * 60 * 1000) load();
+  if (!document.hidden && Date.now() - loadedAt > 10 * 60 * 1000) load({ silent: true });
 });
 
+// Kotivalikosta avatussa sovelluksessa ei ole selaimen päivityspainiketta,
+// joten yhteyden palatessa lista haetaan itsestään.
+window.addEventListener("online", () => load({ silent: true }));
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+
+pruneStore();
 load();
 </script>
 

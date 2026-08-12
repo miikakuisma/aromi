@@ -1,0 +1,12 @@
+<!-- Sama merkki, kutistettuna 78 %:iin. Android rajaa maskable-ikonista
+     ympyrän tai muun muodon, joten merkin on mahduttava turva-alueelle. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Ruokalista">
+  <rect width="512" height="512" fill="#14243A"/>
+  <g transform="translate(256,256) scale(.78) translate(-256,-256)">
+    <path d="M118 264a138 138 0 0 0 276 0z" fill="#E0912A"/>
+    <rect x="98" y="244" width="316" height="38" rx="19" fill="#E0912A"/>
+    <path d="M200 196c-26-30 22-48-2-80" fill="none" stroke="#E0912A" stroke-width="22" stroke-linecap="round"/>
+    <path d="M256 186c-26-32 22-50-2-82" fill="none" stroke="#E0912A" stroke-width="22" stroke-linecap="round"/>
+    <path d="M312 196c-26-30 22-48-2-80" fill="none" stroke="#E0912A" stroke-width="22" stroke-linecap="round"/>
+  </g>
+</svg>

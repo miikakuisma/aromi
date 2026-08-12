@@ -32,6 +32,9 @@ GET /api/week   →  { week, days[5], … }     koko viikko, verkkosivu
 |---|---|
 | `worker.js` | Puter Worker -backend, API-proxy Aromin ja asiakkaiden välillä |
 | `index.html` | Mobiiliystävällinen viikkonäkymä, julkaistaan Puter-sivustona |
+| `manifest.json` | Sovellusmanifesti: nimi, värit ja ikonit kotivalikkoa varten |
+| `sw.js` | Service worker, säilöö sivupohjan ja fontit offline-käyttöä varten |
+| `icons/` | Sovellusikonit — lähde `icon.svg`, siitä renderöidyt PNG:t |
 | `TRMNL plugin.html` | Jinja2-template TRMNL-näytölle |
 
 ## Asennus
@@ -46,7 +49,9 @@ GET /api/week   →  { week, days[5], … }     koko viikko, verkkosivu
 
 1. Avaa `index.html` ja aseta `WORKER_URL` osoittamaan omaan workeriisi
    (tiedoston lopussa olevassa scriptissä)
-2. Julkaise tiedosto Puter-sivustona
+2. Julkaise **koko kansio** Puter-sivustona: `index.html`, `manifest.json`,
+   `sw.js` ja `icons/`. Service worker toimii vain sivuston juuresta
+   tarjoiltuna, joten yksittäisen tiedoston julkaiseminen ei riitä.
 3. Sivu hakee datan workerilta — worker lähettää `Access-Control-Allow-Origin: *`,
    joten sivu voi olla eri osoitteessa kuin worker
 
@@ -56,6 +61,40 @@ GET /api/week   →  { week, days[5], … }     koko viikko, verkkosivu
 2. Strategiaksi valitse **Webhook/Polling** ja syötä workerin URL
    (`https://<sinun-worker>.puter.site/api/menu`)
 3. Kopioi `TRMNL plugin.html` sisältö pluginin **Markup**-kenttään
+
+## Sovelluksena puhelimessa
+
+Sivu on asennettava web-sovellus. iOS: **Jaa → Lisää Koti-valikkoon**.
+Android: Chromen valikko → **Asenna sovellus**. Kotivalikosta avattuna se
+näkyy ilman selainpalkkeja.
+
+Ilman verkkoyhteyttä sivu avautuu silti: service worker säilöö sivupohjan ja
+fontit, ja viimeksi haettu viikko piirretään localStoragesta. Tällöin
+viikkonauhan alle ilmestyy rivi *"Ei yhteyttä — lista tallennettu eilen klo
+7.42"*. Kun listaa ei ole tallennettuna eikä verkkoa ole, näkyy tavallinen
+virheilmoitus.
+
+Ruokalistaa **ei** säilötä service workerin välimuistiin. Osoite
+`/api/week?offset=0` tarkoittaa eri viikkoa eri päivinä, joten välimuisti
+tarjoilisi viime viikon listan tämän viikon kohdalla. Sen sijaan sivu
+tallentaa listat viikon maanantai avaimenaan ja laskee kuluvan päivän itse
+(`Europe/Helsinki`) sen sijaan että luottaisi vastauksen `today`-kenttään —
+näin eilen tallennettu lista korostaa silti oikean päivän.
+
+Sivupohja päivittyy itsestään: tallennettu versio näytetään heti ja tuore
+haetaan taustalla, joten muutokset tulevat näkyviin seuraavalla avauksella.
+`sw.js`-tiedoston `VERSION` kannattaa nostaa vain jos välimuistin sisältö
+muuttuu — se siivoaa vanhat välimuistit kerralla.
+
+Ikonit renderöidään `icons/icon.svg`-lähteestä. Jos muutat merkkiä, aja:
+
+```bash
+./icons/render.sh
+```
+
+Maskable-versiossa (`icon-maskable.svg`) merkki on kutistettu 78 %:iin, koska
+Android rajaa ikonista ympyrän tai muun muodon eikä merkki saa jäädä reunan
+alle.
 
 ## API
 
