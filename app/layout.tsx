@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Familjen_Grotesk, Newsreader } from "next/font/google";
+import { SerwistProvider } from "@serwist/turbopack/react";
 import "./globals.css";
 
 const display = Familjen_Grotesk({
@@ -56,7 +57,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fi" dir="ltr" className={`${display.variable} ${body.variable}`}>
-      <body>{children}</body>
+      <body>
+        <SerwistProvider swUrl="/serwist/sw.js">{children}</SerwistProvider>
+      </body>
     </html>
   );
 }
