@@ -73,11 +73,13 @@ Sivu on asennettava web-sovellus. iOS: **Jaa → Lisää Koti-valikkoon**.
 Android: Chromen valikko → **Asenna sovellus**. Kotivalikosta avattuna se
 näkyy ilman selainpalkkeja.
 
-Ilman verkkoyhteyttä sivu avautuu silti: service worker säilöö sivupohjan ja
-fontit, ja viimeksi haettu viikko piirretään localStoragesta. Tällöin
-viikkonauhan alle ilmestyy rivi *"Ei yhteyttä — lista tallennettu eilen klo
-7.42"*. Kun listaa ei ole tallennettuna eikä verkkoa ole, näkyy tavallinen
-virheilmoitus.
+Ilman verkkoyhteyttä sivu avautuu silti: service worker säilöö sivupohjan. Jos
+välimuistissa oleva sivu sisältää jo kuluvan viikon listan, se piirretään
+sellaisenaan eikä erillistä ilmoitusta näytetä — hakua ei silloin edes yritetä.
+Jos sivu on vanhemmalta viikolta, haku yritetään, ja sen epäonnistuessa lista
+piirretään localStoragesta ja viikkonauhan alle ilmestyy rivi *"Ei yhteyttä —
+lista tallennettu eilen klo 7.42"*. Kun listaa ei ole tallennettuna eikä verkkoa
+ole, näkyy tavallinen virheilmoitus.
 
 Ruokalistaa **ei** säilötä service workerin välimuistiin. Osoite
 `/api/week?offset=0` tarkoittaa eri viikkoa eri päivinä, joten välimuisti
@@ -89,7 +91,8 @@ näin eilen tallennettu lista korostaa silti oikean päivän.
 Service worker rakennetaan `app/sw.ts`-lähteestä Serwistillä, joka laskee
 esisäilötyt tiedostot käännöksen tuloksesta — versionumeroa ei tarvitse
 ylläpitää käsin. Fontit tulevat `next/font`-paketin kautta omalta palvelimelta,
-joten erillistä fonttivälimuistia ei ole.
+joten Google Fontsiin ei enää tehdä verkkopyyntöä; Serwist säilöö ne osana
+`defaultCachea` `static-font-assets`-välimuistiin.
 
 Ikonit renderöidään `public/icons/icon.svg`-lähteestä. Jos muutat merkkiä, aja:
 
