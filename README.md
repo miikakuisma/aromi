@@ -14,52 +14,57 @@ ruokailijaryhmä "Ala-Aste").
 ```
                     ┌─────────────────────┐
 TRMNL-näyttö  ──────┤                     │
-                    │   Puter Worker      ├────►  Aromi API (aromi.hel.fi)
-Verkkosivu    ──────┤   worker.js         │
+                    │   Next.js / Vercel  ├────►  Aromi API (aromi.hel.fi)
+Verkkosivu    ──────┤                     │
                     └─────────────────────┘
 
 GET /api/menu   →  { date, meals }          päivän lista, TRMNL
 GET /api/week   →  { week, days[5], … }     koko viikko, verkkosivu
 ```
 
-- **`worker.js`** hakee ruokalistan Aromista ja muuntaa sen yksinkertaiseksi JSONiksi.
+- **`lib/`** hakee ruokalistan Aromista ja muuntaa sen yksinkertaiseksi JSONiksi.
 - **`TRMNL plugin.html`** renderöi päivän listan e-ink -näytölle Jinja2-templatella.
-- **`index.html`** on itsenäinen verkkosivu, joka näyttää koko viikon puhelimessa.
+- **`app/`** on Next.js-sovellus: viikkonäkymä ja molemmat API-reitit samassa
+  osoitteessa.
 
 ## Tiedostot
 
 | Tiedosto | Kuvaus |
 |---|---|
-| `worker.js` | Puter Worker -backend, API-proxy Aromin ja asiakkaiden välillä |
-| `index.html` | Mobiiliystävällinen viikkonäkymä, julkaistaan Puter-sivustona |
-| `manifest.json` | Sovellusmanifesti: nimi, värit ja ikonit kotivalikkoa varten |
-| `sw.js` | Service worker, säilöö sivupohjan ja fontit offline-käyttöä varten |
-| `icons/` | Sovellusikonit — lähde `icon.svg`, siitä renderöidyt PNG:t |
+| `app/page.tsx` | Viikkonäkymä, palvelin hakee kuluvan viikon valmiiksi |
+| `app/week-view.tsx` | Selainpuoli: viikon vaihto, tallennus, offline-tila |
+| `app/api/menu/` | Päivän lista TRMNL:lle |
+| `app/api/week/` | Koko viikko verkkosivulle |
+| `lib/` | Aromi-haku, päivämäärälogiikka ja muunnokset testeineen |
+| `app/sw.ts` | Service worker, säilöö sivupohjan offline-käyttöä varten |
+| `public/icons/` | Sovellusikonit — lähde `icon.svg`, siitä renderöidyt PNG:t |
 | `TRMNL plugin.html` | Jinja2-template TRMNL-näytölle |
 
 ## Asennus
 
-### 1. Worker Puter.com-alustalle
+### 1. Kehitysympäristö
 
-1. Luo tili [Puter.com](https://puter.com/)-palveluun
-2. Luo uusi Worker ja kopioi `worker.js` sisältö sinne
-3. Worker tarjoaa kaksi endpointia, `GET /api/menu` ja `GET /api/week`
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npm test         # lib/-kansion yksikkötestit
+```
 
-### 2. Verkkosivu
+### 2. Julkaisu Verceliin
 
-1. Avaa `index.html` ja aseta `WORKER_URL` osoittamaan omaan workeriisi
-   (tiedoston lopussa olevassa scriptissä)
-2. Julkaise **koko kansio** Puter-sivustona: `index.html`, `manifest.json`,
-   `sw.js` ja `icons/`. Service worker toimii vain sivuston juuresta
-   tarjoiltuna, joten yksittäisen tiedoston julkaiseminen ei riitä.
-3. Sivu hakee datan workerilta — worker lähettää `Access-Control-Allow-Origin: *`,
-   joten sivu voi olla eri osoitteessa kuin worker
+```bash
+npx vercel        # esikatselu
+npx vercel --prod # tuotanto
+```
+
+Ympäristömuuttujia ei tarvita — Aromi-portaalin tunnisteet ovat
+`lib/aromi.ts`-tiedostossa.
 
 ### 3. TRMNL Plugin
 
 1. Luo [TRMNL Developer](https://usetrmnl.com/plugin/new)-sivulla uusi Private Plugin
-2. Strategiaksi valitse **Webhook/Polling** ja syötä workerin URL
-   (`https://<sinun-worker>.puter.site/api/menu`)
+2. Strategiaksi valitse **Webhook/Polling** ja syötä oman julkaisusi osoite
+   (`https://kouluruoka.vercel.app/api/menu`)
 3. Kopioi `TRMNL plugin.html` sisältö pluginin **Markup**-kenttään
 
 ## Sovelluksena puhelimessa
@@ -81,15 +86,15 @@ tallentaa listat viikon maanantai avaimenaan ja laskee kuluvan päivän itse
 (`Europe/Helsinki`) sen sijaan että luottaisi vastauksen `today`-kenttään —
 näin eilen tallennettu lista korostaa silti oikean päivän.
 
-Sivupohja päivittyy itsestään: tallennettu versio näytetään heti ja tuore
-haetaan taustalla, joten muutokset tulevat näkyviin seuraavalla avauksella.
-`sw.js`-tiedoston `VERSION` kannattaa nostaa vain jos välimuistin sisältö
-muuttuu — se siivoaa vanhat välimuistit kerralla.
+Service worker rakennetaan `app/sw.ts`-lähteestä Serwistillä, joka laskee
+esisäilötyt tiedostot käännöksen tuloksesta — versionumeroa ei tarvitse
+ylläpitää käsin. Fontit tulevat `next/font`-paketin kautta omalta palvelimelta,
+joten erillistä fonttivälimuistia ei ole.
 
-Ikonit renderöidään `icons/icon.svg`-lähteestä. Jos muutat merkkiä, aja:
+Ikonit renderöidään `public/icons/icon.svg`-lähteestä. Jos muutat merkkiä, aja:
 
 ```bash
-./icons/render.sh
+./public/icons/render.sh
 ```
 
 Maskable-versiossa (`icon-maskable.svg`) merkki on kutistettu 78 %:iin, koska
@@ -164,11 +169,11 @@ tarkistaa Aromin omalta sivulta — niitä ei pidä johtaa näistä koodeista.
 
 ## Toisen koulun tai päiväkodin käyttöönotto
 
-Muokkaa `worker.js`-tiedoston yläreunan vakioita:
+Muokkaa `lib/aromi.ts`-tiedoston yläreunan vakioita:
 
 - `API_BASE` — portaalin polku, esim. `.../PALKE/KeMenu054/api/...`
 - `RESTAURANT_ID`, `DINER_GROUP_ID`, `DIET_GROUP_ID`
-- `RESTAURANT_NAME` (ja `index.html`-tiedoston otsikot)
+- `RESTAURANT_NAME` (ja otsikot `app/page.tsx`- ja `app/layout.tsx`-tiedostoissa)
 
 Tunnisteet löytyvät portaalin omista API-kutsuista. Portaali on Angular-sovellus,
 joten ne eivät näy HTML-lähdekoodissa:
@@ -189,5 +194,6 @@ Jos koululla on useampi ruokailijaryhmä, valitse oikea `Name`-kentän perusteel
 ## Teknologiat
 
 - [TRMNL](https://trmnl.com/) - e-ink -näyttöalusta
-- [Puter.com](https://puter.com/) - pilvialusta workereille ja staattisille sivuille
+- [Next.js](https://nextjs.org/) - sovelluskehys
+- [Vercel](https://vercel.com/) - julkaisualusta
 - [Aromi](https://aromi.hel.fi/) - Helsingin kaupungin ruokalistajärjestelmä
