@@ -2100,7 +2100,12 @@ import { SerwistProvider } from "@serwist/turbopack/react";
 ```tsx
     <html lang="fi" dir="ltr" className={`${display.variable} ${body.variable}`}>
       <body>
-        <SerwistProvider swUrl="/serwist/sw.js">{children}</SerwistProvider>
+        {/* reloadOnOnline={false}: WeekView kuuntelee online-tapahtuman itse ja
+            hakee listan paikallaan. Serwistin oletus tekee location.reload():n,
+            joka nollaisi selatun viikon kesken lukemisen. */}
+        <SerwistProvider swUrl="/serwist/sw.js" reloadOnOnline={false}>
+          {children}
+        </SerwistProvider>
       </body>
     </html>
 ```
