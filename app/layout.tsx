@@ -38,7 +38,9 @@ export const metadata: Metadata = {
     apple: "/icons/apple-touch-icon.png",
   },
   // iOS 16.4 ja uudemmat lukevat manifestin, vanhemmat tarvitsevat tämän.
-  other: { "mobile-web-app-capable": "yes" },
+  // `appleWebApp.capable` tuottaa Next 16:ssa vain `mobile-web-app-capable`,
+  // joten Applen oma tagi on lisättävä erikseen.
+  other: { "apple-mobile-web-app-capable": "yes" },
 };
 
 export const viewport: Viewport = {
