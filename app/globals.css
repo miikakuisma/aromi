@@ -183,9 +183,6 @@ button {
   color: var(--ink-soft);
 }
 
-/* hidden-attribuutti ei tehoa yksinään, koska display on flex. */
-.stale[hidden] { display: none; }
-
 .stale::before {
   content: "";
   flex: none;

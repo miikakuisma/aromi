@@ -42,7 +42,12 @@ export interface DayOption {
 export interface WeekDay {
   date: string;
   weekday: string;
+  /** Vain tiedoksi. Asiakas muotoilee otsikon itse dayNum/monthNum-funktioilla. */
   label: string;
+  /**
+   * Vain tiedoksi. Asiakas laskee kuluvan päivän itse, koska tallennettu lista
+   * voi olla eiliseltä — silloin tämä kenttä korostaisi väärän päivän.
+   */
   isToday: boolean;
   options: DayOption[];
 }
@@ -53,6 +58,10 @@ export interface WeekData {
   week: number;
   start: string;
   end: string;
+  /**
+   * Vain tiedoksi. Asiakas laskee kuluvan päivän itse samasta syystä kuin
+   * WeekDay.isToday kohdalla.
+   */
   today: string;
   days: WeekDay[];
 }

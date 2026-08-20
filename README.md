@@ -33,10 +33,14 @@ GET /api/week   →  { week, days[5], … }     koko viikko, verkkosivu
 |---|---|
 | `app/page.tsx` | Viikkonäkymä, palvelin hakee kuluvan viikon valmiiksi |
 | `app/week-view.tsx` | Selainpuoli: viikon vaihto, tallennus, offline-tila |
+| `app/components/` | Näkymäkomponentit: viikkonauha, päivälista, tilat |
+| `app/globals.css` | Sivun tyylit |
 | `app/api/menu/` | Päivän lista TRMNL:lle |
 | `app/api/week/` | Koko viikko verkkosivulle |
 | `lib/` | Aromi-haku, päivämäärälogiikka ja muunnokset testeineen |
 | `app/sw.ts` | Service worker, säilöö sivupohjan offline-käyttöä varten |
+| `app/serwist/[path]/` | Reitti joka kääntää service workerin `app/sw.ts`-lähteestä |
+| `app/manifest.ts` | Sovellusmanifesti (korvaa aiemman `manifest.json`-tiedoston) |
 | `public/icons/` | Sovellusikonit — lähde `icon.svg`, siitä renderöidyt PNG:t |
 | `TRMNL plugin.html` | Jinja2-template TRMNL-näytölle |
 
