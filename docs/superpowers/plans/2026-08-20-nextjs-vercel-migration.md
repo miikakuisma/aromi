@@ -110,15 +110,26 @@ Every task's requirements implicitly include this section.
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "plugins": [{ "name": "next" }],
     "paths": { "@/*": ["./*"] }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }
 ```
+
+`jsx` must be `"react-jsx"`, not `"preserve"`. Next 16.3.1 treats it as required
+configuration (`writeConfigurationDefaults.js`, "next.js uses the React automatic
+runtime") and rewrites the file on every `next build` / `next dev`. The
+`.next/dev/types` include is added by the same mechanism.
 
 - [ ] **Step 3: Create `next.config.mjs`**
 
