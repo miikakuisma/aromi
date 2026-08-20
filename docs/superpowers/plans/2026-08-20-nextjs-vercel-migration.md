@@ -1699,6 +1699,10 @@ export function WeekView({
   // silent = älä näytä latausluurankoa. Taustapäivitys ei saa tyhjentää ruutua.
   const load = useCallback(
     async (nextOffset: number, { silent = false } = {}) => {
+      // "Tänään" lasketaan uudelleen joka haussa, kuten alkuperäinen render()
+      // teki. Pelkkä visibilitychange ei riitä: edestakainen viikkoselailu ei
+      // piilota välilehteä, joten korostus jäisi eiliseen.
+      setToday(todayInHelsinki());
       const myId = ++requestId.current;
       const saved = readWeek(expectedMonday(nextOffset));
 
@@ -1746,7 +1750,13 @@ export function WeekView({
     // Palvelimen renderöimä sivu voi tulla service workerin välimuistista ja
     // sisältää edellisen viikon listan. Siihen luotetaan vain jos se osuu
     // kuluvaan viikkoon — muuten haetaan kuten ilman alkudataa.
-    if (initialData && initialData.start === expectedMonday(0)) return;
+    if (initialData && initialData.start === expectedMonday(0)) {
+      // Palvelimen valmiiksi hakema lista talteen. Ilman tätä offline-tila
+      // jäisi tyhjäksi käyttäjällä joka vain avaa sivun eikä selaa viikkoja —
+      // storeWeek kutsutaan muuten vain load():n sisältä.
+      storeWeek(initialData);
+      return;
+    }
     void load(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
