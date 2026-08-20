@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Familjen_Grotesk, Newsreader } from "next/font/google";
 import { SerwistProvider } from "@serwist/turbopack/react";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const display = Familjen_Grotesk({
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SerwistProvider swUrl="/serwist/sw.js" reloadOnOnline={false}>
           {children}
         </SerwistProvider>
+        <Analytics />
       </body>
     </html>
   );
