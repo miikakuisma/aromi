@@ -2205,7 +2205,7 @@ Ympäristömuuttujia ei tarvita — Aromi-portaalin tunnisteet ovat
 
 1. Luo [TRMNL Developer](https://usetrmnl.com/plugin/new)-sivulla uusi Private Plugin
 2. Strategiaksi valitse **Webhook/Polling** ja syötä oman julkaisusi osoite
-   (`https://<projekti>.vercel.app/api/menu`)
+   (`https://kouluruoka.vercel.app/api/menu`)
 3. Kopioi `TRMNL plugin.html` sisältö pluginin **Markup**-kenttään
 ```
 
@@ -2300,7 +2300,7 @@ This step is done by hand in the TRMNL UI, not in code:
 
 1. Open the plugin at <https://usetrmnl.com/plugins>
 2. Change the polling URL from `https://aromi.puter.work/api/menu` to
-   `https://<projekti>.vercel.app/api/menu`
+   `https://kouluruoka.vercel.app/api/menu`
 3. Force a refresh and confirm the display shows today's menu
 4. `TRMNL plugin.html` itself needs no change
 
